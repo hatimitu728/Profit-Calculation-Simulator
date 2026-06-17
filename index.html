@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>五感シンクロ型DOOH 5カ年予測シミュレーター</title>
+    <!-- Tailwind CSS (デザイン用) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js (グラフビジュアル用) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- カスタムアニメーション用のCSS追加 -->
+    <style>
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        /* 結果エリアのフェードイン・スライドアニメーション */
+        .animate-fade-in-up {
+            animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        /* マクロな要素のホバー遷移を滑らかにする transition */
+        .hover-lift {
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .hover-lift:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans">
+
+    <div class="container mx-auto px-4 py-8">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-slate-900 mb-2">📊 五感シンクロ型DOOH事業 5カ年予測シミュレーター</h1>
+            <p class="text-slate-600">左下の「🚀 結果を表示」ボタンを押すと、初期投資回収の交差点（損益分岐点）が自動でハイライトされます。</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- 入力エリア（左側） -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 lg:col-span-1 space-y-6">
+                
+                <div>
+                    <h2 class="text-md font-bold text-blue-600 mb-4 flex items-center">📢 ① DOOH 広告枠設定</h2>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">プレミアム枠単価/週 (円)</label>
+                            <input type="number" id="prem_price" value="500000" class="w-full bg-slate-100 border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition rounded-lg p-2 text-xs outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">プレミアム枠数 (枠)</label>
+                            <input type="number" id="prem_slots" value="2" class="w-full bg-slate-100 border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition rounded-lg p-2 text-xs outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">一般枠単価/週 (円)</label>
+                            <input type="number" id="std_price" value="250000" class="w-full bg-slate-100 border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition rounded-lg p-2 text-xs outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">一般枠数 (枠)</label>
+                            <input type="number" id="std_slots" value="4" class="w-full bg-slate-100 border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition rounded-lg p-2 text-xs outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">年間平均広告稼働率 (%)</label>
+                            <input type="number" id="ad_occupancy" value="85" class="w-full bg-slate-100 border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition rounded-lg p-2 text-xs outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">広告単価の年間成長率 (%)</label>
+                            <input type="number" id="ad_growth" value="5" class="w-full bg-slate-100 border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition rounded-lg p-2 text-xs outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h2 class="text-md font-bold text-amber-600 mb-4 flex items-center">🎪 ② イベント・送客設定</h2>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">週末イベント利用料/回 (円)</label>
+                            <input type="number" id="event_price" value="600000" class="w-full bg-slate-100 border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition rounded-lg p-2 text-xs outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">月平均イベント開催回数 (回)</label>
+                            <input type="number" id="events_per_month" value="2" class="w-full bg-slate-100 border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition rounded-lg p-2 text-xs outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">1イベントの運営原価 (円)</label>
+                            <input type="number" id="event_ops_cost" value="80000" class="w-full bg-slate-100 border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition rounded-lg p-2 text-xs outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">イベント単価の年間成長率 (%)</label>
+                            <input type="number" id="event_growth" value="3" class="w-full bg-slate-100 border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition rounded-lg p-2 text-xs outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">1日平均ベンチ利用者数 (人)</label>
+                            <input type="number" id="daily_bench_users" value="600" class="w-full bg-slate-100 border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition rounded-lg p-2 text-xs outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">送客・クーポン転換率 (%)</label>
+                            <input type="number" id="cpa_conv" value="4.0" step="0.1" class="w-full bg-slate-100 border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition rounded-lg p-2 text-xs outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">送客成果報酬単価 (円)</label>
+                            <input type="number" id="cpa_commission" value="150" class="w-full bg-slate-100 border border-slate-300 rounded-lg p-2 text-xs outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h2 class="text-md font-bold text-rose-600 mb-4 flex items-center">🛠️ ③ 初期投資 (CAPEX) & 償却</h2>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">LEDビジョン本体・工事 (円)</label>
+                            <input type="number" id="capex_dooh" value="6500000" class="w-full bg-slate-100 border border-slate-300 rounded-lg p-2 text-xs outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">アロマ制御システム (円)</label>
+                            <input type="number" id="capex_scent" value="1800000" class="w-full bg-slate-100 border border-slate-300 rounded-lg p-2 text-xs outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">スマートベンチ (円)</label>
+                            <input type="number" id="capex_bench" value="1500000" class="w-full bg-slate-100 border border-slate-300 rounded-lg p-2 text-xs outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">システム開発・初期構築費 (円)</label>
+                            <input type="number" id="capex_system" value="3000000" class="w-full bg-slate-100 border border-slate-300 rounded-lg p-2 text-xs outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">耐用年数（償却期間） (年)</label>
+                            <input type="number" id="depreciation_years" value="5" class="w-full bg-slate-100 border border-slate-300 rounded-lg p-2 text-xs outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h2 class="text-md font-bold text-emerald-600 mb-4 flex items-center">⚡ ④ 運用費・消耗品・税金</h2>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">年間スペース占用料 (円)</label>
+                            <input type="number" id="opex_rent" value="2400000" class="w-full bg-slate-100 border border-slate-300 rounded-lg p-2 text-xs outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">年間定期保守点検費 (円)</label>
+                            <input type="number" id="opex_maintenance" value="800000" class="w-full bg-slate-100 border border-slate-300 rounded-lg p-2 text-xs outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">アロマ精油単価 / 1L (円)</label>
+                            <input type="number" id="scent_oil_price" value="40000" class="w-full bg-slate-100 border border-slate-300 rounded-lg p-2 text-xs outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">ディフューザー1台の消費量 (ml/h)</label>
+                            <input type="number" id="scent_consumption_ml_hour" value="5" class="w-full bg-slate-100 border border-slate-300 rounded-lg p-2 text-xs outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">ディフューザー設置台数 (台)</label>
+                            <input type="number" id="scent_machines" value="3" class="w-full bg-slate-100 border border-slate-300 rounded-lg p-2 text-xs outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">1日のDOOH稼働時間 (h)</label>
+                            <input type="number" id="operating_hours" value="18" class="w-full bg-slate-100 border border-slate-300 rounded-lg p-2 text-xs outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">LEDビジョン平均消費電力 (kW)</label>
+                            <input type="number" id="led_power" value="1.5" step="0.1" class="w-full bg-slate-100 border border-slate-300 rounded-lg p-2 text-xs outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">電気代単価 (円/kWh)</label>
+                            <input type="number" id="elec_price" value="30" class="w-full bg-slate-100 border border-slate-300 rounded-lg p-2 text-xs outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">年間一般管理費・その他 (円)</label>
+                            <input type="number" id="opex_admin" value="240000" class="w-full bg-slate-100 border border-slate-300 rounded-lg p-2 text-xs outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">代理店手数料マージン率 (%)</label>
+                            <input type="number" id="agency_margin_rate" value="20" class="w-full bg-slate-100 border border-slate-300 rounded-lg p-2 text-xs outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">実効法人税率 (%)</label>
+                            <input type="number" id="tax_rate" value="30" class="w-full bg-slate-100 border border-slate-300 rounded-lg p-2 text-xs outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 🚀 実行ボタン 🚀 -->
+                <button onclick="calculate()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl active:scale-95 transition-all duration-150 flex items-center justify-center gap-2 sticky bottom-4 z-10">
+                    🚀 結果を表示（再計算）
+                </button>
+
+            </div>
+
+            <!-- 右カラム：結果出力 ＆ 予測グラフエリア -->
+            <div id="results_panel" class="lg:col-span-2 space-y-8">
+                
+                <!-- KPIサマリー -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center hover-lift">
+                        <p class="text-xs font-bold text-slate-500 uppercase">1年目の想定売上</p>
+                        <p id="metric_revenue" class="text-md md:text-xl font-bold text-slate-800 mt-1 transition-all">0 円</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center hover-lift">
+                        <p class="text-xs font-bold text-slate-500 uppercase">初期投資総額 (CAPEX)</p>
+                        <p id="metric_capex" class="text-md md:text-xl font-bold text-slate-800 mt-1 transition-all">0 円</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-emerald-200 bg-emerald-50/30 shadow-sm text-center hover-lift">
+                        <p class="text-xs font-bold text-emerald-600 uppercase">1年目想定純利益</p>
+                        <p id="metric_profit" class="text-md md:text-xl font-bold text-emerald-700 mt-1 transition-all">0 円</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-blue-200 bg-blue-50/30 shadow-sm text-center hover-lift">
+                        <p class="text-xs font-bold text-blue-600 uppercase">1年目損益分岐(BEP)</p>
+                        <p id="metric_bep" class="text-md md:text-xl font-bold text-blue-700 mt-1 transition-all">0 円</p>
+                    </div>
+                </div>
+
+                <!-- 投資回収メッセージ -->
+                <div class="bg-blue-50 border border-blue-100 text-blue-800 p-4 rounded-xl text-xs md:text-sm shadow-sm transition-all" id="info_text">
+                    ボタンを押すと収益予測が実行されます。
+                </div>
+
+                <!-- 予測ビジュアルグラフ -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm h-80 hover-lift">
+                        <h3 class="text-sm font-bold text-slate-700 mb-4">📈 累計キャッシュフロー（投資回収ライン）</h3>
+                        <div class="relative h-60">
+                            <canvas id="chart_cashflow"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm h-80 hover-lift">
+                        <h3 class="text-sm font-bold text-slate-700 mb-4">📊 売上高・総費用・純利益推移</h3>
+                        <div class="relative h-60">
+                            <canvas id="chart_summary"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 実際の損益明細一覧（P&L） -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover-lift">
+                    <div class="p-4 bg-slate-100 border-b border-slate-200 flex justify-between items-center">
+                        <h3 class="font-bold text-slate-700 text-sm">📋 年度別 損益計算書（P&L）詳細明細</h3>
+                        <div>
+                            <select id="select_year" class="bg-white border border-slate-300 rounded-lg px-3 py-1 text-xs font-semibold outline-none cursor-pointer" onchange="renderPLTable()">
+                                <option value="0">1年目 (初年度)</option>
+                                <option value="1">2年目</option>
+                                <option value="2">3年目</option>
+                                <option value="3">4年目</option>
+                                <option value="4">5年目</option>
+                            </select>
+                        </div>
+                    </div>
+                    <table class="w-full text-left border-collapse text-xs md:text-sm">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold">
+                                <th class="p-3">勘定科目 / 区分</th>
+                                <th class="p-3 text-right">金額 (円)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pl_table_body" class="divide-y divide-slate-200 text-slate-600">
+                            <!-- JS側で動的に書き換えます -->
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         内蔵プログラム（モデル ＆ コントローラー）
+         ========================================== -->
+    <script>
+        let prevValues = { revenue: 0, capex: 0, profit: 0, bep: 0 };
+
+        // ------------------------------------------
+        // [MODEL] 5カ年シミュレーション計算エンジン
+        // ------------------------------------------
+        function calculateFiveYearProjection(p) {
+            const years = ["1年目", "2年目", "3年目", "4年目", "5年目"];
+            
+            const results = {
+                years: years,
+                rev_ad_prem: [],
+                rev_ad_std: [],
+                rev_event: [],
+                rev_cpa: [],
+                total_revenue: [],
+                depreciation: [],
+                rent: [],
+                maintenance: [],
+                scent_oil_cost: [],
+                electricity_cost: [],
+                opex_admin: [],
+                total_fixed_cost: [],
+                var_agency: [],
+                var_event_ops: [],
+                total_variable_cost: [],
+                operating_profit: [],
+                tax: [],
+                net_profit: [],
+                cumulative_cash_flow: [],
+                total_capex: 0,
+                bep_y1: 0
+            };
+
+            const annualScentLiters = (p.scent_consumption_ml_hour * p.operating_hours * 365 * p.scent_machines) / 1000;
+            const annualScentCost = annualScentLiters * p.scent_oil_price;
+            const annualElecCost = p.led_power * p.operating_hours * 365 * p.elec_price;
+            const totalCapex = p.capex_dooh + p.capex_scent + p.capex_bench + p.capex_system;
+            results.total_capex = totalCapex;
+
+            const annualDepreciation = totalCapex / p.depreciation_years;
+            let cashAccum = -totalCapex;
+
+            for (let i = 0; i < 5; i++) {
+                const gAd = Math.pow(1 + p.ad_growth, i);
+                const gEvent = Math.pow(1 + p.event_growth, i);
+
+                const yRevAdPrem = (p.prem_price * p.prem_slots) * 52 * p.ad_occupancy * gAd;
+                const yRevAdStd = (p.std_price * p.std_slots) * 52 * p.ad_occupancy * gAd;
+                const yRevEvent = p.event_price * (p.events_per_month * 12) * gEvent;
+                const yRevCpa = (p.daily_bench_users * 365 * p.cpa_conv) * p.cpa_commission;
+                const yTotalRev = yRevAdPrem + yRevAdStd + yRevEvent + yRevCpa;
+
+                const yDep = i < p.depreciation_years ? annualDepreciation : 0;
+                const yFixed = p.opex_rent + p.opex_maintenance + annualScentCost + annualElecCost + p.opex_admin + yDep;
+
+                const yVarAgency = yTotalRev * p.agency_margin_rate;
+                const yVarEventOps = p.event_ops_cost * (p.events_per_month * 12) * gEvent;
+                const yTotalVar = yVarAgency + yVarEventOps;
+
+                const yOp = yTotalRev - yTotalVar - yFixed;
+                const yTax = Math.max(0, yOp * p.tax_rate);
+                const yNet = yOp - yTax;
+
+                const yCash = yNet + yDep;
+                cashAccum += yCash;
+
+                results.rev_ad_prem.push(yRevAdPrem);
+                results.rev_ad_std.push(yRevAdStd);
+                results.rev_event.push(yRevEvent);
+                results.rev_cpa.push(yRevCpa);
+                results.total_revenue.push(yTotalRev);
+                results.depreciation.push(yDep);
+                results.rent.push(p.opex_rent);
+                results.maintenance.push(p.opex_maintenance);
+                results.scent_oil_cost.push(annualScentCost);
+                results.electricity_cost.push(annualElecCost);
+                results.opex_admin.push(p.opex_admin);
+                results.total_fixed_cost.push(yFixed);
+                results.var_agency.push(yVarAgency);
+                results.var_event_ops.push(yVarEventOps);
+                results.total_variable_cost.push(yTotalVar);
+                results.operating_profit.push(yOp);
+                results.tax.push(yTax);
+                results.net_profit.push(yNet);
+                results.cumulative_cash_flow.push(cashAccum);
+            }
+
+            const cmRatioY1 = (results.total_revenue[0] - results.total_variable_cost[0]) / results.total_revenue[0];
+            results.bep_y1 = cmRatioY1 > 0 ? results.total_fixed_cost[0] / cmRatioY1 : 0;
+
+            return results;
+        }
+
+        // ------------------------------------------
+        // [CONTROLLER] UI・DOM制御および描画
+        // ------------------------------------------
+        let chartCash = null;
+        let chartSummary = null;
+        let currentProjectionData = null;
+
+        function getInputParams() {
+            return {
+                prem_price: parseFloat(document.getElementById('prem_price').value) || 0,
+                prem_slots: parseFloat(document.getElementById('prem_slots').value) || 0,
+                std_price: parseFloat(document.getElementById('std_price').value) || 0,
+                std_slots: parseFloat(document.getElementById('std_slots').value) || 0,
+                ad_occupancy: (parseFloat(document.getElementById('ad_occupancy').value) || 0) / 100,
+                ad_growth: (parseFloat(document.getElementById('ad_growth').value) || 0) / 100,
+
+                event_price: parseFloat(document.getElementById('event_price').value) || 0,
+                events_per_month: parseFloat(document.getElementById('events_per_month').value) || 0,
+                event_ops_cost: parseFloat(document.getElementById('event_ops_cost').value) || 0,
+                event_growth: (parseFloat(document.getElementById('event_growth').value) || 0) / 100,
+
+                daily_bench_users: parseFloat(document.getElementById('daily_bench_users').value) || 0,
+                cpa_conv: (parseFloat(document.getElementById('cpa_conv').value) || 0) / 100,
+                cpa_commission: parseFloat(document.getElementById('cpa_commission').value) || 0,
+
+                capex_dooh: parseFloat(document.getElementById('capex_dooh').value) || 0,
+                capex_scent: parseFloat(document.getElementById('capex_scent').value) || 0,
+                capex_bench: parseFloat(document.getElementById('capex_bench').value) || 0,
+                capex_system: parseFloat(document.getElementById('capex_system').value) || 0,
+                depreciation_years: parseFloat(document.getElementById('depreciation_years').value) || 1,
+
+                opex_rent: parseFloat(document.getElementById('opex_rent').value) || 0,
+                opex_maintenance: parseFloat(document.getElementById('opex_maintenance').value) || 0,
+                scent_oil_price: parseFloat(document.getElementById('scent_oil_price').value) || 0,
+                scent_consumption_ml_hour: parseFloat(document.getElementById('scent_consumption_ml_hour').value) || 0,
+                scent_machines: parseFloat(document.getElementById('scent_machines').value) || 0,
+                operating_hours: parseFloat(document.getElementById('operating_hours').value) || 0,
+                led_power: parseFloat(document.getElementById('led_power').value) || 0,
+                elec_price: parseFloat(document.getElementById('elec_price').value) || 0,
+                opex_admin: parseFloat(document.getElementById('opex_admin').value) || 0,
+                agency_margin_rate: (parseFloat(document.getElementById('agency_margin_rate').value) || 0) / 100,
+                tax_rate: (parseFloat(document.getElementById('tax_rate').value) || 0) / 100
+            };
+        }
+
+        // 数値カウントアップ
+        function animateValue(id, start, end, duration = 650) {
+            const obj = document.getElementById(id);
+            if (!obj) return;
+            
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const easeProgress = progress * (2 - progress); // easeOutQuad
+                const currentVal = Math.round(easeProgress * (end - start) + start);
+                
+                obj.innerText = currentVal.toLocaleString() + " 円";
+                
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        window.calculate = function() {
+            try {
+                const params = getInputParams();
+                currentProjectionData = calculateFiveYearProjection(params);
+
+                // 右側のパネル全体をスライド表示
+                const panel = document.getElementById('results_panel');
+                panel.classList.remove('animate-fade-in-up');
+                void panel.offsetWidth; 
+                panel.classList.add('animate-fade-in-up');
+
+                // KPIアニメーション
+                animateValue('metric_revenue', prevValues.revenue, currentProjectionData.total_revenue[0]);
+                animateValue('metric_capex', prevValues.capex, currentProjectionData.total_capex);
+                animateValue('metric_profit', prevValues.profit, currentProjectionData.net_profit[0]);
+                animateValue('metric_bep', prevValues.bep, currentProjectionData.bep_y1);
+
+                prevValues.revenue = currentProjectionData.total_revenue[0];
+                prevValues.capex = currentProjectionData.total_capex;
+                prevValues.profit = currentProjectionData.net_profit[0];
+                prevValues.bep = currentProjectionData.bep_y1;
+
+                // 補助メッセージ更新
+                const adRevenuePerWeek = (params.prem_price * params.prem_slots + params.std_price * params.std_slots) * params.ad_occupancy;
+                const min_weeks = adRevenuePerWeek > 0 ? (currentProjectionData.bep_y1 - currentProjectionData.rev_event[0] - currentProjectionData.rev_cpa[0]) / adRevenuePerWeek : 0;
+                
+                let infoHTML = "1年目の損益分岐点をクリアするために最低限必要な、年間広告稼働週数は約 <strong>" + Math.max(0, min_weeks).toFixed(1) + " 週</strong>（プレミアム" + params.prem_slots + "枠・一般" + params.std_slots + "枠稼働時）です。";
+                document.getElementById('info_text').innerHTML = infoHTML;
+
+                // グラフの安全描画
+                try {
+                    renderCharts(currentProjectionData);
+                } catch (chartError) {
+                    console.warn("Chart.jsの描画に失敗しました。");
+                    document.getElementById('info_text').innerHTML += "<br><span class='text-amber-600 font-bold'>【注意】</span>ブラウザ制限によりグラフのみ非表示となっていますが、数値計算および下記の損益明細一覧は正常に出力されています。";
+                }
+                
+                renderPLTable();
+            } catch (calcError) {
+                document.getElementById('info_text').innerHTML = "<span class='text-rose-600 font-bold'>計算中にエラーが発生しました: </span>" + calcError.message;
+                console.error(calcError);
+            }
+        };
+
+        window.renderPLTable = function() {
+            if (!currentProjectionData) return;
+            
+            const yearIdx = parseInt(document.getElementById('select_year').value);
+            const d = currentProjectionData;
+
+            const totalCost = d.total_fixed_cost[yearIdx] + d.total_variable_cost[yearIdx];
+            const marginalProfit = d.total_revenue[yearIdx] - d.total_variable_cost[yearIdx];
+            const cmRatio = d.total_revenue[yearIdx] > 0 ? (marginalProfit / d.total_revenue[yearIdx] * 100).toFixed(2) : "0.00";
+
+            const html = `
+                <tr><td class="p-3">【売上】プレミアム広告枠売上高</td><td class="p-3 text-right">${d.rev_ad_prem[yearIdx].toLocaleString()} 円</td></tr>
+                <tr><td class="p-3">【売上】一般広告枠売上高</td><td class="p-3 text-right">${d.rev_ad_std[yearIdx].toLocaleString()} 円</td></tr>
+                <tr><td class="p-3">【売上】イベントスペース提供売上高</td><td class="p-3 text-right">${d.rev_event[yearIdx].toLocaleString()} 円</td></tr>
+                <tr><td class="p-3">【売上】送客成果報酬売上高</td><td class="p-3 text-right">${d.rev_cpa[yearIdx].toLocaleString()} 円</td></tr>
+                <tr class="bg-slate-50 font-bold text-slate-900"><td class="p-3">◆ ① 売上高合計 (A)</td><td class="p-3 text-right">${d.total_revenue[yearIdx].toLocaleString()} 円</td></tr>
+                <tr><td class="p-3">【固定費】初期投資減価償却費</td><td class="p-3 text-right">${d.depreciation[yearIdx].toLocaleString()} 円</td></tr>
+                <tr><td class="p-3">【固定費】スペース占用料 / 賃料</td><td class="p-3 text-right">${d.rent[yearIdx].toLocaleString()} 円</td></tr>
+                <tr><td class="p-3">【固定費】システム・アロマ保守点検費</td><td class="p-3 text-right">${d.maintenance[yearIdx].toLocaleString()} 円</td></tr>
+                <tr><td class="p-3">【固定費】アロマ精油消耗品費</td><td class="p-3 text-right">${d.scent_oil_cost[yearIdx].toLocaleString()} 円</td></tr>
+                <tr><td class="p-3">【固定費】ビジョン・スマートベンチ電気代</td><td class="p-3 text-right">${d.electricity_cost[yearIdx].toLocaleString()} 円</td></tr>
+                <tr><td class="p-3">【固定費】一般管理費・その他</td><td class="p-3 text-right">${d.opex_admin[yearIdx].toLocaleString()} 円</td></tr>
+                <tr class="bg-slate-50 font-bold text-slate-900"><td class="p-3">◆ ② 固定費合計 (B)</td><td class="p-3 text-right">${d.total_fixed_cost[yearIdx].toLocaleString()} 円</td></tr>
+                <tr><td class="p-3">【変動費】代理店マージン手数料</td><td class="p-3 text-right">${d.var_agency[yearIdx].toLocaleString()} 円</td></tr>
+                <tr><td class="p-3">【変動費】イベント追加現場運用費</td><td class="p-3 text-right">${d.var_event_ops[yearIdx].toLocaleString()} 円</td></tr>
+                <tr class="bg-slate-50 font-bold text-slate-900"><td class="p-3">◆ ③ 変動費合計 (C)</td><td class="p-3 text-right">${d.total_variable_cost[yearIdx].toLocaleString()} 円</td></tr>
+                <tr class="font-semibold text-slate-800"><td class="p-3">■ 年間限界利益 (A - C) [限界利益率]</td><td class="p-3 text-right">${marginalProfit.toLocaleString()} 円 [${cmRatio} %]</td></tr>
+                <tr class="font-bold text-slate-900"><td class="p-3">★ 営業利益 (A - B - C)</td><td class="p-3 text-right">${d.operating_profit[yearIdx].toLocaleString()} 円</td></tr>
+                <tr><td class="p-3">【税金】法人税等相当額</td><td class="p-3 text-right">${d.tax[yearIdx].toLocaleString()} 円</td></tr>
+                <tr class="bg-emerald-50 font-bold text-emerald-800 border-t-2 border-emerald-500"><td class="p-3">🏆 当期純利益 (最終利益)</td><td class="p-3 text-right">${d.net_profit[yearIdx].toLocaleString()} 円</td></tr>
+            `;
+            
+            document.getElementById('pl_table_body').innerHTML = html;
+        };
+
+        // 🌟 損益分岐交差点 (BEP) を検出して赤ターゲット＆点線を描画するカスタムプラグイン 🌟
+        const bepMarkerPlugin = {
+            id: 'bepMarker',
+            afterDraw: function(chart) {
+                const ctx = chart.ctx;
+                ctx.save();
+
+                const datasets = chart.data.datasets[0].data; // [-12800000, Y1_cash, Y2_cash...]
+                let crossIdx = -1;
+
+                // キャッシュがマイナスからプラスに転じる（0円ラインを突破する）境界インデックスを検索
+                for (let i = 0; i < datasets.length - 1; i++) {
+                    if (datasets[i] < 0 && datasets[i+1] >= 0) {
+                        crossIdx = i;
+                        break;
+                    }
+                }
+
+                // 5年以内に回収が完了する場合のみターゲットを描画
+                if (crossIdx !== -1) {
+                    const meta = chart.getDatasetMeta(0);
+                    if (!meta.data || meta.data.length < crossIdx + 2) {
+                        ctx.restore();
+                        return;
+                    }
+
+                    // 境界を挟む前後2点の座標を取得
+                    const p1 = meta.data[crossIdx];
+                    const p2 = meta.data[crossIdx+1];
+                    const yZero = chart.scales.y.getPixelForValue(0); // Y=0 (0円) の物理ピクセル位置
+
+                    // 線形補間により、交点の正確なX座標(ピクセル)を算出
+                    const val1 = datasets[crossIdx];
+                    const val2 = datasets[crossIdx+1];
+                    const t = (0 - val1) / (val2 - val1);
+                    const xZero = p1.x + t * (p2.x - p1.x);
+
+                    // 1. 縦の赤点線を描画（交点からチャート下部まで）
+                    ctx.beginPath();
+                    ctx.setLineDash([5, 5]); // 点線
+                    ctx.strokeStyle = '#EF4444'; // 赤
+                    ctx.lineWidth = 1.5;
+                    ctx.moveTo(xZero, chart.scales.y.top);
+                    ctx.lineTo(xZero, chart.scales.y.bottom);
+                    ctx.stroke();
+
+                    // 2. 交点に外側のグロー（光輪）を描画
+                    ctx.beginPath();
+                    ctx.setLineDash([]); // 実線に戻す
+                    ctx.arc(xZero, yZero, 10, 0, 2 * Math.PI);
+                    ctx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+
+                    // 3. 交点に内側の実点（赤丸）を描画
+                    ctx.beginPath();
+                    ctx.arc(xZero, yZero, 5, 0, 2 * Math.PI);
+                    ctx.fillStyle = '#EF4444';
+                    ctx.fill();
+
+                    // 4. 交点の横に回収完了年数をテキスト描画
+                    ctx.fillStyle = '#EF4444';
+                    ctx.font = 'bold 11px sans-serif';
+                    const paybackYear = crossIdx + t; // crossIdx=0(初期)から何年経ったか
+                    ctx.fillText(`★ 回収完了: ${paybackYear.toFixed(1)}年目`, xZero + 15, yZero - 12);
+                }
+                ctx.restore();
+            }
+        };
+
+        function renderCharts(d) {
+            if (chartCash !== null) {
+                chartCash.destroy();
+                chartCash = null;
+            }
+            if (chartSummary !== null) {
+                chartSummary.destroy();
+                chartSummary = null;
+            }
+
+            // 1. キャッシュフロー推移（折れ線：点と線が左から右へ滑らかに引かれる）
+            const ctxCash = document.getElementById('chart_cashflow').getContext('2d');
+            chartCash = new Chart(ctxCash, {
+                type: 'line',
+                data: {
+                    labels: ['初期投資時', ...d.years],
+                    datasets: [{
+                        label: '累計キャッシュフロー',
+                        data: [-d.total_capex, ...d.cumulative_cash_flow],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.08)',
+                        borderWidth: 3,
+                        tension: 0.15,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 1200,
+                        easing: 'easeOutQuart',
+                        delay: function(context) {
+                            return context.dataIndex * 120;
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: false }
+                    }
+                },
+                plugins: [bepMarkerPlugin] // 🌟 損益分岐交差点ハイライトプラグインを有効化
+            });
+
+            // 2. 年次サマリー推移（棒グラフ）
+            const ctxSummary = document.getElementById('chart_summary').getContext('2d');
+            const totalCosts = d.total_fixed_cost.map((val, idx) => val + d.total_variable_cost[idx]);
+            chartSummary = new Chart(ctxSummary, {
+                type: 'bar',
+                data: {
+                    labels: d.years,
+                    datasets: [
+                        { label: '売上高', data: d.total_revenue, backgroundColor: '#3b82f6' },
+                        { label: '総費用', data: totalCosts, backgroundColor: '#f59e0b' },
+                        { label: '当期純利益', data: d.net_profit, backgroundColor: '#10b981' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 1200,
+                        easing: 'easeOutQuart',
+                        delay: function(context) {
+                            let delay = 0;
+                            if (context.type === 'data') {
+                                delay = context.dataIndex * 160 + context.datasetIndex * 80;
+                            }
+                            return delay;
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        // 起動時自動計算の安全呼び出し
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => { window.calculate(); });
+        } else {
+            window.calculate();
+        }
+    </script>
+</body>
+</html>
